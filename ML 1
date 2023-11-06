@@ -1,0 +1,70 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_squared_error
+
+# Step 1: Pre-process the dataset
+# Load the dataset
+data = pd.read_csv('Uber_Fares_Dataset.csv')
+
+# Data cleaning and feature selection (customize this based on your dataset)
+# Handle missing values
+data.dropna(inplace=True)
+
+# Feature selection
+features = ['distance', 'duration', 'pickup_location', 'dropoff_location']
+X = data[features]
+y = data['fare']
+
+# Step 2: Identify outliers
+# Detect and handle outliers (customize this based on your dataset)
+sns.boxplot(data['fare'])
+plt.show()
+
+# Define a function to remove outliers
+def remove_outliers(df, column):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    df = df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
+    return df
+
+data = remove_outliers(data, 'fare')
+
+# Step 3: Check the correlation
+correlation_matrix = data.corr()
+sns.heatmap(correlation_matrix, annot=True)
+plt.show()
+
+# Step 4: Implement linear regression and random forest regression models
+# Split the dataset into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Linear Regression
+lr_model = LinearRegression()
+lr_model.fit(X_train, y_train)
+y_pred_lr = lr_model.predict(X_test)
+
+# Random Forest Regression
+rf_model = RandomForestRegressor(n_estimators=100)
+rf_model.fit(X_train, y_train)
+y_pred_rf = rf_model.predict(X_test)
+
+# Step 5: Evaluate the models and compare their scores
+# Evaluate linear regression model
+r2_lr = r2_score(y_test, y_pred_lr)
+rmse_lr = mean_squared_error(y_test, y_pred_lr, squared=False)
+
+# Evaluate random forest regression model
+r2_rf = r2_score(y_test, y_pred_rf)
+rmse_rf = mean_squared_error(y_test, y_pred_rf, squared=False)
+
+# Compare the models based on R2 and RMSE scores
+print("Linear Regression - R2:", r2_lr, "RMSE:", rmse_lr)
+print("Random Forest Regression - R2:", r2_rf, "RMSE:", rmse_rf)
